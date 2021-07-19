@@ -111,7 +111,6 @@ if __name__ == "__main__":
 	
 	### Step 1: Choosing the interface to be used as the AP
 	print(G + "*** 1:  Select an interface that will be used for the fake AP. ***\n")
-	#empty = input ("Press Enter to continue.........")
 	print(W)
 	os.system('ifconfig')
 	global interface2
@@ -127,7 +126,6 @@ if __name__ == "__main__":
 	
 	### Step 2: Activate the fake AP
 	print(G + "*** 2:  Start the fake AP. ***\n")
-	#empty = input ("Press Enter to continue.........")
 	print(W)
 	fake_ap_on()
 	create_conf_files()

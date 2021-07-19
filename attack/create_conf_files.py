@@ -2,9 +2,8 @@ import os
 import sys
 
 
-##############################################
-######## hostapd configuration file ##########
-##############################################
+######################################## hostapd Configuration File  ###################################
+
 '''
 hostapd (host access point daemon) is a user space daemon software 
 enabling a network interface card to act as an access point and authentication server
@@ -32,9 +31,8 @@ hostapd_file.write(line3)
 hostapd_file.write(line4)
 
 
-##############################################
-######## dnsmasq configuration file ##########
-##############################################
+######################################## dnsmasq Configuration File  ###################################
+
 '''
 dnsmasq is free software intended for small computer networks
 dnsmasq is providing: 

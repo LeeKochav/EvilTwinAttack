@@ -37,7 +37,6 @@ T  = '\033[93m' # tan
 def monitor_mode():
     global interface
     print(G + "*** 1. Turn on 'monitor mode' for the desired interface. *** \n")
-    #entr = input ("Press Enter to continue.........")
     print(W)
     os.system('ifconfig')
     interface = input(G + "Please enter the interface name you want to put in 'monitor mode' and press enter: ")
@@ -87,26 +86,30 @@ def ap_scan():
         for x in range(num_of_ap):
             print("[" + str(x) + "] - BSSID: " + ap_list[x][BSSID] + " \t Channel:" + str(ap_list[x][CHANNEL]) + " \t AP name: " + ap_list[x][ESSID]) 
         print("\n************* FINISH SCANNING *************\n")
-        invalidInput = True
+        invalid_input = True
         # Choosing the AP to attack
-        while invalidInput:  
-            ap_index = int(input("Please enter the number of the AP in the list you want to attack and press enter: "))
-            #validate user input 
-            if ap_index < 0 or ap_index > num_of_ap:
-                print("Invalid input - AP number is not in the list choose again. \n")
+        while invalid_input:  
+            ap_index = input("Please enter the number of the AP in the list you want to attack and press enter: ")
+            if ap_index.isnumeric():
+                ap_index_numeric= int(ap_index)
+                #validate user input 
+                if ap_index_numeric > num_of_ap:
+                    print("Invalid input choose again. \n")
+                else:
+                    # Print the choosen AP
+                    print("You choose the AP: [" + str(ap_index_numeric) + "] - BSSID: " + ap_list[ap_index_numeric][BSSID] + " Channel:" + str(ap_list[ap_index_numeric][CHANNEL]) + " AP name: " + ap_list[ap_index_numeric][ESSID])
+                    # Set the channel as the choosen AP channel in order to send packets to connected clients later
+                    set_channel(int(ap_list[ap_index_numeric][CHANNEL]))
+                    # Save all the needed information about the choosen AP
+                    global ap_mac
+                    global ap_name
+                    global ap_channel
+                    ap_mac = ap_list[ap_index_numeric][BSSID]
+                    ap_name = ap_list[ap_index_numeric][ESSID]
+                    ap_channel = ap_list[ap_index_numeric][CHANNEL]
+                    invalid_input = False
             else:
-                # Print the choosen AP
-                print("You choose the AP: [" + str(ap_index) + "] - BSSID: " + ap_list[ap_index][BSSID] + " Channel:" + str(ap_list[ap_index][CHANNEL]) + " AP name: " + ap_list[ap_index][ESSID])
-                # Set the channel as the choosen AP channel in order to send packets to connected clients later
-                set_channel(int(ap_list[ap_index][CHANNEL]))
-                # Save all the needed information about the choosen AP
-                global ap_mac
-                global ap_name
-                global ap_channel
-                ap_mac = ap_list[ap_index][BSSID]
-                ap_name = ap_list[ap_index][ESSID]
-                ap_channel = ap_list[ap_index][CHANNEL]
-                invalidInput = False
+               print("Invalid input choose again. \n") 
     else: 
         # If no AP was found. 
         rescan = input("No networks were found. Do you want to rescan? [Y/n] ")
@@ -167,15 +170,13 @@ def ap_scan_pkt(pkt):
 ### Rapper function for 'client_scan()'. 
 def client_scan_rap():
     print(G + "\n*** 3. Start sniffer to find the AP connected clients *** \n")
-    print(G+ "\n      Scanning for clients...\n")
     print(W)
     client_scan()
-    print("\n")
-
 
 ### In this fucntion we scan the network for clients who are connected to the choosen AP. 
 ### We present to the user all the clients that were found, and he choose which client he want to attack. 
 def client_scan():
+    print(G+ "\n      Scanning for clients...\n")
     # Sniffing packets - scanning the network for clients which are connected to the choosen AP 
     sniff(iface=interface, prn=client_scan_pkt, timeout=time_out)
     num_of_client = len(client_list)
@@ -186,27 +187,32 @@ def client_scan():
         for x in range(num_of_client):
             print("[" + str(x) + "] - "+ client_list[x])
         print("\n************** FINISH SCANNING **************\n")
-        # Choosing the client to attack
-        client_index = input("Please enter the number of the client in the list you want to attack or enter 'R' if you want to rescan and press enter: ")
-        if client_index == 'R': 
-            # Rescan
-            client_scan()
-        elif client_index.isnumeric():
-            # Client was choosen
-            invalidInput = True
-            while invalidInput:  
+        invalid_input = True
+        is_rescan =False
+        while invalid_input:  
+            # Choosing the client to attack
+            client_index = input("Please enter the number of the client in the list you want to attack or enter 'R' if you want to rescan and press enter: ")
+            if client_index == 'R': 
+                # Rescan
+                is_rescan = True
+                break
+            elif client_index.isnumeric():
+                # Client was choosen
                 #validate user input 
-                client_index_invalid = int(client_index)
-                if client_index_invalid < 0 or client_index_invalid > num_of_client:
-                    print("Invalid input - Client number is not in the list choose again. \n")
-                    client_index = input("Please enter the number of the client you want to attack and press enter:")
+                client_index_numeric= int(client_index)
+                if client_index_numeric > num_of_client:
+                    print("Invalid input choose again. \n")
                 else:
-                    print("You choose the client: [" + client_index + "] - "+ client_list[int(client_index)])
+                    print("You choose the client: [" + client_index + "] - "+ client_list[client_index_numeric])
                     global client_mac
                     # Save the needed information about the choosen client
-                    client_mac = client_list[int(client_index)]
-                    invalidInput = False
+                    client_mac = client_list[client_index_numeric]
+                    invalid_input = False
+            else:
+                 print("Invalid input choose again. \n")
 
+        if is_rescan:
+            client_scan()
     else: 
         # If no client was found. 
         rescan = input("No clients were found. Do you want to rescan? [Y/n] ")
@@ -230,7 +236,7 @@ def client_scan_pkt(pkt):
                 client_list.append(pkt.addr1)
 
 
-######################################## Deauthentication Attcak ###################################
+######################################## Deauthentication Attack ###################################
 
 
 ### We send the deauthentication packets between the choosen AP and client. 
@@ -251,10 +257,10 @@ if __name__ == "__main__":
     ###Process must be execute as root to perform system hardware && software actions.
     if os.geteuid():
         sys.exit(R + '[**] Please run as root')
-    
-    print(P + "********************************************************************** \n")
-    print("***** Welcome to the EVIL TWIN ATTACK program***** \n")
-    #print("***** Part A: SELECT the AP we want to attack ***** \n")
+
+    print(P+"***** Welcome to the EVIL TWIN ATTACK program ***** \n")
+    print(B + "\n********************************************************************** \n")
+    print("***** Part A: SELECT the AP we want to attack && perform Deauthentication ***** \n")
     print("********************************************************************** \n")
     
     ### Step 1: Select an interface and turn on moitor mode for it. 
