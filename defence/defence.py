@@ -69,7 +69,7 @@ def ap_scan():
     # A daemon thread runs without blocking the main program from exiting
     channel_changer.daemon = True
     channel_changer.start()
-    print("\n      Scanning for networks...\n")
+    print(O+"\n************* START SCANNING FOR NETWORKS *************\n")
     # Sniffing packets - scanning the network for AP in the area
     # iface – the interface that is in monitor mode
     # prn – function to apply to each packet
@@ -131,9 +131,16 @@ def ap_scan_pkt(pkt):
                         break
                 # same ap essid different bssid
                 if trusted_ap_bssid != bssid:
-                    print(P + "trusted: " + trusted_ap_bssid +"\t untrusted: " +bssid +"\n")
-                    evil_ap_list.append([essid, bssid, channel])
-                    print(R + "ALERT !! \n Detected unsecure access point please disconnect from the network : "+essid + " \n")
+                    #print(P + "trusted: " + trusted_ap_bssid +"\t untrusted: " +bssid +"\n")
+                    checkAppend = True
+                    num_of_evil_ap = len(evil_ap_list)
+                    for x in range(num_of_evil_ap):
+                        if evil_ap_list[x][BSSID] == bssid:
+                            checkAppend = False
+                            break
+                    if checkAppend:
+                        evil_ap_list.append([essid, bssid, channel])
+                        print(R + "\tALERT !! \n Detected unsecure access point please disconnect from the network : "+essid + " \n")
 
 ######################
 
@@ -152,10 +159,15 @@ if __name__ == "__main__":
 
     ### Step 2: Scan for evil APS 
     ap_scan_rap()
-     
+    print(O+"\n************* FINISH SCANNING *************\n")
+    print(W + "\n*************** Secure APs list ***************\n")
+    num_of_ap = len(ap_list)
+    for x in range(num_of_ap):
+        print("[" + str(x) + "] - BSSID: " + ap_list[x][BSSID] + " \t Channel:" + str(ap_list[x][CHANNEL]) + " \t AP name: " + ap_list[x][ESSID]) 
     print(R + "\n*************** EVIL APs list ***************\n")
     num_of_evil_ap = len(evil_ap_list)
     for x in range(num_of_evil_ap):
         print("[" + str(x) + "] - BSSID: " + evil_ap_list[x][BSSID] + " \t Channel:" + str(evil_ap_list[x][CHANNEL]) + " \t AP name: " + evil_ap_list[x][ESSID]) 
+    print("\n")
     ### Step 5: Put the interface back in managed mode  
     managed_mode()
