@@ -137,7 +137,7 @@ def change_channel():
 def set_channel(channel):
     os.system('iwconfig %s channel %d' % (interface, channel))
 
-### Dot11 represent the MAC header, it is the abbreviated specification name 802.11
+### Dot11(class - scapy) represent the MAC header, it is the abbreviated specification name 802.11
 ### Dot11Elt layers is where we put the necessary information: SSID, supported speeds (up to eight), additional supported speeds, channel used.
 ### Dot11Beacon represents an IEEE 802.11 Beacon
 

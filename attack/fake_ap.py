@@ -18,8 +18,6 @@ T  = '\033[93m' # tan
 def reset_setting():
 	### Start system network service
 	os.system('service NetworkManager start')
-	### Stop apache2 service
-	os.system('service apache2 stop')
 	### Stop and kill the hostapd and dnsmasq services.
 	os.system('service hostapd stop') #hostapd (host access point daemon) for make access point
 	os.system('service dnsmasq stop') #dsnmasq is to make DNS and DHCP server
@@ -78,7 +76,6 @@ def run_fake_ap():
 	os.system('route add default gw 10.0.0.1')
 	### Link the hostapd to the configuration file.
 	os.system('hostapd hostapd.conf -B')
-	# os.system('service apache2 start')
 	os.system('route add default gw 10.0.0.1')
 
 

